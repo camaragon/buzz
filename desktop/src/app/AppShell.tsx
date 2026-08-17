@@ -148,6 +148,7 @@ export function AppShell() {
     goPulse,
     goSettings,
     goWorkflows,
+    goWorkstreams,
     closeSettings,
     openSearchHit,
   } = useAppNavigation();
@@ -874,6 +875,7 @@ export function AppShell() {
                         onSelectPulse={() => void goPulse()}
                         onSelectSettings={handleOpenSettings}
                         onSelectWorkflows={() => void goWorkflows()}
+                        onSelectWorkstreamBoard={() => void goWorkstreams()}
                         onSetPresenceStatus={(status) =>
                           presenceSession.setStatus(status)
                         }
