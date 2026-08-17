@@ -1272,6 +1272,7 @@ export function createMarkdownComponents(
     const {
       channels,
       imetaByUrl,
+      onOpenChannel,
       onOpenEntityLink,
       onOpenMessageLink,
       onImportSnapshotFromUrl,
@@ -1281,10 +1282,6 @@ export function createMarkdownComponents(
     if (!interactive) {
       return <span className="font-medium text-current">{children}</span>;
     }
-
-    // Markdown image-link syntax (`[![alt](src)](href)`) otherwise nests the
-    // image lightbox button inside an anchor. Keep the image as the lightbox
-    // trigger and suppress the parent link activation for block media.
     if (hasBlockMedia(React.Children.toArray(children))) {
       return <>{children}</>;
     }
@@ -1359,6 +1356,7 @@ export function createMarkdownComponents(
               channels={channels}
               interactive={interactive}
               link={messageLinkTarget.link}
+              onOpenChannel={onOpenChannel}
               onOpenMessageLink={onOpenMessageLink}
             />
           );
@@ -1682,7 +1680,8 @@ export function createMarkdownComponents(
     }: {
       children?: React.ReactNode;
     }) {
-      const { channels, onOpenMessageLink } = useMarkdownRuntime();
+      const { channels, onOpenChannel, onOpenMessageLink } =
+        useMarkdownRuntime();
       const href = String(children ?? "");
       const parsed = parseMessageLink(href);
       if (!parsed.ok) {
@@ -1694,6 +1693,7 @@ export function createMarkdownComponents(
           channels={channels}
           interactive={interactive}
           link={parsed.value}
+          onOpenChannel={onOpenChannel}
           onOpenMessageLink={onOpenMessageLink}
         />
       );
