@@ -147,8 +147,7 @@ pub fn run() {
                         return;
                     }
                     // Linux/WebKitGTK needs media-stream settings and a
-                    // permission-request handler for getUserMedia; no-op
-                    // on macOS/Windows.
+                    // permission-request handler for getUserMedia; no-op on macOS/Windows.
                     linux_media::enable_media_capture(&webview);
 
                     // macOS applies the restored geometry asynchronously. Wait
@@ -669,6 +668,7 @@ pub fn run() {
             search_users,
             get_presence,
             get_os_idle_seconds,
+            append_profiling_log,
             get_default_relay_url,
             auto_connect_default_relay_enabled,
             get_legacy_workspace_storage,
