@@ -56,6 +56,7 @@ import {
   SyntaxHighlightedCode,
 } from "./markdown/CodeBlock";
 import {
+  EntityLinkAnchor,
   renderEntityLinkAnchor,
   useEntityCardOpenHandlers,
   useOpenEntityLink,
@@ -1667,13 +1668,11 @@ export function createMarkdownComponents(
       const href = String(children ?? "");
       if (!parseEntityLink(href).ok)
         return <span data-entity-link="">{href}</span>;
-      return renderEntityLinkAnchor({
-        children: href,
+      return React.createElement(
+        EntityLinkAnchor,
+        { href, interactive, onOpenEntityLink, relayOrigin },
         href,
-        interactive,
-        onOpenEntityLink,
-        relayOrigin,
-      });
+      );
     },
     "message-link": function MarkdownMessageLink({
       children,
