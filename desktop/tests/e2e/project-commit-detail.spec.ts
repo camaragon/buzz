@@ -1,4 +1,4 @@
-import { expect, test } from "../helpers/test";
+import { bootstrapE2ePage, expect, test } from "../helpers/test";
 
 import { waitForAnimations } from "../helpers/animations";
 import { installMockBridge, TEST_IDENTITIES } from "../helpers/bridge";
@@ -430,7 +430,7 @@ test("multi-repository projects switch the active repository", async ({
 }) => {
   await enableProjectsFeature(page);
   await installMockBridge(page);
-  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await bootstrapE2ePage(page, "/", { waitUntil: "domcontentloaded" });
   await addProjectToSidebar(page, "buzz");
 
   const primaryRepository = page.getByTestId("sidebar-project-repository-buzz");
@@ -881,7 +881,7 @@ test("adding a repository retries and reports an error when the 30617 publicatio
     window.__BUZZ_E2E_REJECT_PROJECT_EVENT_KINDS__ = [30617, 30617];
   });
   await installMockBridge(page);
-  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await bootstrapE2ePage(page, "/", { waitUntil: "domcontentloaded" });
   await addProjectToSidebar(page, "buzz");
 
   await page.getByTestId("add-project-repository").click();
@@ -939,7 +939,7 @@ test("adding a repository treats a lost 30617 acknowledgement as success", async
     window.__BUZZ_E2E_FAIL_PROJECT_EVENT_ACK_KINDS__ = [30617];
   });
   await installMockBridge(page);
-  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await bootstrapE2ePage(page, "/", { waitUntil: "domcontentloaded" });
   await addProjectToSidebar(page, "buzz");
 
   await page.getByTestId("add-project-repository").click();
