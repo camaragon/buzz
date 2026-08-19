@@ -94,6 +94,8 @@ for (const [project, checkerPath] of projects) {
       "mixed safe and unsafe tests",
       `${imports}\ntest("safe", async ({ page }) => { await bootstrapE2ePage(page); }); test("unsafe", async () => {});`,
     ],
+    ["missing bootstrap receiver", spec("await bootstrapE2ePage();")],
+    ["non-identifier bootstrap receiver", spec('await bootstrapE2ePage("/");')],
     ["if-wrapped call", spec("if (true) { await bootstrapE2ePage(page); }")],
     [
       "catch-only call",

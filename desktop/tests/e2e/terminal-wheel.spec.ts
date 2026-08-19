@@ -175,7 +175,7 @@ test("project terminal button opens Buzz Term for the repository", async ({
   await page.setViewportSize({ width: 1280, height: 800 });
   await installTerminalBackend(page);
   await installMockBridge(page);
-  await bootstrapE2ePage("/", { waitUntil: "domcontentloaded" });
+  await bootstrapE2ePage(page, "/", { waitUntil: "domcontentloaded" });
   await page.getByTestId("open-projects-view").click();
   await page.getByTestId("projects-section-projects").click();
   const projectEntry = page

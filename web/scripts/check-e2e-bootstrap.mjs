@@ -144,7 +144,11 @@ function awaitedCall(statement) {
 function isAwaitedCall(statement, name) {
   const call = awaitedCall(statement);
   return (
-    call && ts.isIdentifier(call.expression) && call.expression.text === name
+    call &&
+    ts.isIdentifier(call.expression) &&
+    call.expression.text === name &&
+    call.arguments.length > 0 &&
+    ts.isIdentifier(call.arguments[0])
   );
 }
 
