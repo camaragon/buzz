@@ -2952,15 +2952,11 @@ test("manage channel places canvas between channel info and actions", async ({
   expect(canvasBox?.y).toBeLessThan(leaveBox?.y);
 });
 
-async function seedHomeInboxMention(
+async function seedHomeInboxMentionAfterNavigation(
   page: import("@playwright/test").Page,
   itemId: string,
   tags?: string[][],
-  { navigate = true }: { navigate?: boolean } = {},
 ) {
-  if (navigate) {
-    await bootstrapE2ePage(page, "/");
-  }
   await expect(page.getByTestId("home-inbox-list")).toBeVisible();
   await page.waitForFunction(
     () =>
@@ -3009,6 +3005,15 @@ async function seedHomeInboxMention(
   );
 
   await page.getByTestId(`home-inbox-item-${itemId}`).click();
+}
+
+async function bootstrapAndSeedHomeInboxMention(
+  page: import("@playwright/test").Page,
+  itemId: string,
+  tags?: string[][],
+) {
+  await bootstrapE2ePage(page, "/");
+  await seedHomeInboxMentionAfterNavigation(page, itemId, tags);
 }
 
 test("Inbox All excludes generic channel traffic", async ({ page }) => {
@@ -3297,7 +3302,7 @@ test("Inbox merges a due reminder into its represented conversation", async ({
 }) => {
   const messageId = "inbox-reminder-merge-message";
   const reminderId = "inbox-reminder-merge";
-  await seedHomeInboxMention(page, messageId);
+  await bootstrapAndSeedHomeInboxMention(page, messageId);
 
   await page.evaluate(
     async ({
@@ -3469,7 +3474,10 @@ test("Inbox reminder rows and detail identify DM context", async ({ page }) => {
 test("Inbox detail title and source action navigate to the conversation", async ({
   page,
 }) => {
-  await seedHomeInboxMention(page, "mock-feed-home-channel-navigate");
+  await bootstrapAndSeedHomeInboxMention(
+    page,
+    "mock-feed-home-channel-navigate",
+  );
 
   const detail = page.getByTestId("home-inbox-detail");
   await expect(detail.getByRole("heading")).toHaveText("Message in #general");
@@ -3491,11 +3499,15 @@ test("home inbox thread reply mention carries threadRootId to the channel", asyn
   page,
 }) => {
   const rootEventId = "mock-feed-home-thread-root";
-  await seedHomeInboxMention(page, "mock-feed-home-thread-navigate", [
-    ["e", rootEventId, "", "root"],
-    ["e", "mock-feed-home-thread-parent", "", "reply"],
-    ["p", TEST_IDENTITIES.tyler.pubkey],
-  ]);
+  await bootstrapAndSeedHomeInboxMention(
+    page,
+    "mock-feed-home-thread-navigate",
+    [
+      ["e", rootEventId, "", "root"],
+      ["e", "mock-feed-home-thread-parent", "", "reply"],
+      ["p", TEST_IDENTITIES.tyler.pubkey],
+    ],
+  );
 
   const detail = page.getByTestId("home-inbox-detail");
   await expect(detail.getByRole("heading")).toHaveText("Thread in #general");
@@ -3516,7 +3528,7 @@ test("Inbox filter changes preserve valid detail and directly select a replaceme
 }) => {
   const threadItemId = "inbox-filter-thread";
   const actionItemId = "inbox-filter-action";
-  await seedHomeInboxMention(page, threadItemId, [
+  await bootstrapAndSeedHomeInboxMention(page, threadItemId, [
     ["e", "inbox-filter-root", "", "root"],
     ["e", "inbox-filter-parent", "", "reply"],
     ["p", TEST_IDENTITIES.tyler.pubkey],
@@ -3744,7 +3756,7 @@ test("home inbox groups consecutive DMs and opens the full conversation", async 
 test("home inbox manage affordance opens management without leaving home", async ({
   page,
 }) => {
-  await seedHomeInboxMention(page, "mock-feed-home-channel-panel");
+  await bootstrapAndSeedHomeInboxMention(page, "mock-feed-home-channel-panel");
 
   await page
     .getByTestId("home-inbox-detail")
@@ -3809,11 +3821,9 @@ test("home channel settings keeps agent lifecycle actions scoped to the active c
   );
 
   await page.getByRole("button", { exact: true, name: "Inbox" }).click();
-  await seedHomeInboxMention(
+  await seedHomeInboxMentionAfterNavigation(
     page,
     "mock-feed-home-agent-lifecycle",
-    undefined,
-    { navigate: false },
   );
   await page
     .getByTestId("home-inbox-detail")
