@@ -207,7 +207,7 @@ test("withEntityFallbacks re-adds previews dropped by null metadata", () => {
     href: `buzz://pr?id=${"ab".repeat(32)}&owner=${"cd".repeat(32)}&d=buzz`,
     provider: "Buzz",
     title: `buzz #${"ab".repeat(4)}`,
-    typeLabel: "PR",
+    typeLabel: "Review",
   };
 
   assert.deepEqual(withEntityFallbacks([entityPreview], []), [
@@ -228,7 +228,7 @@ test("withEntityFallbacks keeps resolved previews and preserves order", () => {
     href: `buzz://issue?id=${"ef".repeat(32)}&owner=${"cd".repeat(32)}&d=buzz`,
     provider: "Buzz",
     title: `buzz #${"ef".repeat(4)}`,
-    typeLabel: "issue",
+    typeLabel: "Task",
   };
   const resolvedSecond = {
     ...second,
@@ -434,6 +434,60 @@ test("Buzz repository metadata stays image-less and exposes default branch", asy
   assert.equal(result?.faviconDataUrl, null);
   assert.equal(result?.imageDataUrl, null);
   assert.equal(result?.imageDomain, null);
+});
+
+test("Buzz project metadata resolves from the 30621 announcement", async () => {
+  const owner = "cd".repeat(32);
+  const result = await fetchBuzzEntityMetadata(
+    `buzz://project?owner=${owner}&d=pollinator`,
+    async () => [
+      relayEvent({
+        id: "01".repeat(32),
+        kind: 30621,
+        pubkey: owner,
+        tags: [
+          ["d", "pollinator"],
+          ["name", "Pollinator"],
+          ["description", "Cross-repo pollination pipeline"],
+          ["a", `30617:${owner}:flappy-bee`],
+          ["a", `30617:${owner}:hive-tools`],
+        ],
+      }),
+    ],
+  );
+  assert.equal(result?.siteName, "Pollinator");
+  assert.equal(result?.title, "Cross-repo pollination pipeline");
+  assert.equal(result?.description, "2 repositories");
+  assert.equal(result?.imageDataUrl, null);
+});
+
+test("Buzz project metadata declines a missing or invalid announcement", async () => {
+  const owner = "cd".repeat(32);
+  assert.equal(
+    await fetchBuzzEntityMetadata(
+      `buzz://project?owner=${owner}&d=pollinator`,
+      async () => [],
+    ),
+    null,
+  );
+  // Two `d` tags fail NIP-MP envelope validation.
+  assert.equal(
+    await fetchBuzzEntityMetadata(
+      `buzz://project?owner=${owner}&d=pollinator`,
+      async () => [
+        relayEvent({
+          id: "01".repeat(32),
+          kind: 30621,
+          pubkey: owner,
+          tags: [
+            ["d", "pollinator"],
+            ["d", "duplicate"],
+          ],
+        }),
+      ],
+    ),
+    null,
+  );
 });
 
 test("invalidateNegative drops a cached null miss so the next load refetches", async () => {
