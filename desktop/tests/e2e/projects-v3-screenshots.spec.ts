@@ -20,7 +20,7 @@ async function openBuzzProject(page: import("@playwright/test").Page) {
 
 test("sidebar project add flow browses before creating", async ({ page }) => {
   await installMockBridge(page);
-  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await bootstrapE2ePage("/", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("sidebar-project-buzz")).toHaveCount(0);
   await page.getByTestId("sidebar-projects-section-label").hover();
   await page.getByTestId("sidebar-projects-create").click();

@@ -1362,7 +1362,7 @@ test("external repositories stay on local source after a branch round trip", asy
     };
   });
   await installMockBridge(page);
-  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await bootstrapE2ePage("/", { waitUntil: "domcontentloaded" });
   await addProjectToSidebar(page, "buzz");
   await page.getByTestId("sidebar-project-repository-relay-tools").click();
 

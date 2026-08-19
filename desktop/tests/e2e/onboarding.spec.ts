@@ -3664,7 +3664,7 @@ test("same-relay identity replacement rebuilds the community boundary (A→B→A
     },
     { skipOnboardingSeed: true },
   );
-  await page.goto("/");
+  await bootstrapE2ePage("/");
 
   // Seed a draft in tyler's identity-scoped bucket after boot, as if typed in
   // an earlier session. Written directly to localStorage (not through the
@@ -3805,7 +3805,7 @@ test("same-relay identity replacement rebuilds the community boundary (A→B→A
   // reach general through the channel browser.
   await seedActiveIdentity(page, TEST_IDENTITIES.tyler);
   await installMockBridge(page);
-  await page.goto("/");
+  await bootstrapE2ePage("/");
 
   await openChannelBrowser(page);
   await expect(page.getByTestId("channel-browser-dialog")).toBeVisible();
