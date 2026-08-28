@@ -48,6 +48,24 @@ describe("partitionMentionRouting", () => {
     );
   });
 
+  test("fails closed when channel type and membership are unresolved", () => {
+    assert.deepEqual(
+      partitionMentionRouting({
+        channelType: null,
+        membershipResolved: false,
+        mentionPubkeys: [NONMEMBER_AGENT, NONMEMBER_PERSON],
+        memberPubkeys: new Set(),
+        createdPersonaAgentPubkeys: [],
+        isAgentPubkey,
+      }),
+      {
+        notifyingPubkeys: [NONMEMBER_PERSON],
+        referenceOnlyPubkeys: [NONMEMBER_AGENT],
+        promptNonMemberPubkeys: [],
+      },
+    );
+  });
+
   test("does not downgrade a persona just created as a channel agent", () => {
     assert.deepEqual(
       partitionMentionRouting({

@@ -88,7 +88,7 @@ export function partitionMentionRouting({
   isAgentPubkey: (pubkey: string) => boolean;
 }) {
   const normalized = uniqueNormalizedPubkeys(mentionPubkeys);
-  if (channelType === null || channelType === "dm") {
+  if (channelType === "dm") {
     return {
       notifyingPubkeys: normalized,
       referenceOnlyPubkeys: [],
