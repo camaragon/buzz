@@ -68,6 +68,62 @@ export function uniqueNormalizedPubkeys(pubkeys: Iterable<string>) {
   return [...new Set([...pubkeys].map(normalizePubkey))].filter(Boolean);
 }
 
+/**
+ * Only proven channel members may receive notifying agent mentions. Agent
+ * names outside membership remain renderable through reference-only tags.
+ */
+export function partitionMentionRouting({
+  channelType,
+  membershipResolved,
+  mentionPubkeys,
+  memberPubkeys,
+  createdPersonaAgentPubkeys,
+  isAgentPubkey,
+}: {
+  channelType: string | null;
+  membershipResolved: boolean;
+  mentionPubkeys: Iterable<string>;
+  memberPubkeys: ReadonlySet<string>;
+  createdPersonaAgentPubkeys: Iterable<string>;
+  isAgentPubkey: (pubkey: string) => boolean;
+}) {
+  const normalized = uniqueNormalizedPubkeys(mentionPubkeys);
+  if (channelType === null || channelType === "dm") {
+    return {
+      notifyingPubkeys: normalized,
+      referenceOnlyPubkeys: [],
+      promptNonMemberPubkeys: [],
+    };
+  }
+
+  const createdPersonas = new Set(
+    uniqueNormalizedPubkeys(createdPersonaAgentPubkeys),
+  );
+  const normalizedMembers = new Set(
+    [...memberPubkeys].map(normalizePubkey).filter(Boolean),
+  );
+  const provenNonMembers = membershipResolved
+    ? normalized.filter(
+        (pubkey) =>
+          !normalizedMembers.has(pubkey) && !createdPersonas.has(pubkey),
+      )
+    : normalized.filter(
+        (pubkey) => isAgentPubkey(pubkey) && !createdPersonas.has(pubkey),
+      );
+  const referenceOnlyPubkeys = provenNonMembers.filter(isAgentPubkey);
+  const referenceOnlySet = new Set(referenceOnlyPubkeys);
+
+  return {
+    notifyingPubkeys: normalized.filter(
+      (pubkey) => !referenceOnlySet.has(pubkey),
+    ),
+    referenceOnlyPubkeys,
+    promptNonMemberPubkeys: provenNonMembers.filter(
+      (pubkey) => !isAgentPubkey(pubkey),
+    ),
+  };
+}
+
 export function isManagedAgentRunning(agent: ManagedAgent) {
   return agent.status === "running" || agent.status === "deployed";
 }

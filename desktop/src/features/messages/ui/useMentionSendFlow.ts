@@ -43,6 +43,7 @@ import {
   isProviderBackedAgent,
   MENTION_REFERENCE_TAG,
   mergeOutgoingTagsWithReferenceMentions,
+  partitionMentionRouting,
   type PendingNonMemberMentionSend,
   type SendMessageWithMentionFlowInput,
   uniqueNormalizedPubkeys,
@@ -661,23 +662,6 @@ export function useMentionSendFlow({
     ],
   );
 
-  const getNonMemberMentionPubkeys = React.useCallback(
-    (pubkeys: string[]) => {
-      if (
-        channelType === null ||
-        channelType === "dm" ||
-        !mentions.hasResolvedMembers
-      ) {
-        return [];
-      }
-
-      return uniqueNormalizedPubkeys(pubkeys).filter(
-        (pubkey) => !mentions.memberPubkeys.has(pubkey),
-      );
-    },
-    [channelType, mentions.hasResolvedMembers, mentions.memberPubkeys],
-  );
-
   const getDmThreadAgentMentionError = React.useCallback(
     (
       trimmed: string,
@@ -771,29 +755,27 @@ export function useMentionSendFlow({
             mentions.isAgentPubkey(pubkey) ||
             createdPersonaAgentPubkeySet.has(pubkey),
         );
-        const pubkeys = explicitMentionPubkeys;
-        const outgoingTags = [
+        let outgoingTags = [
           ...buildCustomEmojiTags(trimmed, customEmoji),
           ...linkPreviewTags,
         ];
-        const nonMemberPubkeys = getNonMemberMentionPubkeys(pubkeys);
-        let promptNonMemberPubkeys = nonMemberPubkeys.filter(
-          (pubkey) =>
-            !mentions.isManagedAgentPubkey(pubkey) &&
-            !createdPersonaAgentPubkeySet.has(normalizePubkey(pubkey)),
-        );
-
-        if (promptNonMemberPubkeys.length > 0) {
-          try {
-            const managedAgentsByPubkey = await getManagedAgentsByPubkey();
-            promptNonMemberPubkeys = promptNonMemberPubkeys.filter(
-              (pubkey) => !managedAgentsByPubkey.has(normalizePubkey(pubkey)),
-            );
-          } catch {
-            // Keep the hook-based managed-agent filtering even if the query
-            // fallback misses; ordinary non-members still get prompted.
-          }
-        }
+        const {
+          notifyingPubkeys: pubkeys,
+          referenceOnlyPubkeys,
+          promptNonMemberPubkeys,
+        } = partitionMentionRouting({
+          channelType,
+          membershipResolved: mentions.hasResolvedMembers,
+          mentionPubkeys: explicitMentionPubkeys,
+          memberPubkeys: mentions.memberPubkeys,
+          createdPersonaAgentPubkeys,
+          isAgentPubkey: mentions.isAgentPubkey,
+        });
+        outgoingTags =
+          mergeOutgoingTagsWithReferenceMentions(
+            outgoingTags,
+            referenceOnlyPubkeys,
+          ) ?? outgoingTags;
 
         const pendingDraft: PendingNonMemberMentionSend = {
           capturedChannelId: effectiveChannelId,
@@ -836,12 +818,11 @@ export function useMentionSendFlow({
       channelType,
       createMentionedPersonaAgents,
       customEmoji,
-      getManagedAgentsByPubkey,
-      getNonMemberMentionPubkeys,
       getDmThreadAgentMentionError,
       mentions.extractMentionPubkeys,
+      mentions.hasResolvedMembers,
       mentions.isAgentPubkey,
-      mentions.isManagedAgentPubkey,
+      mentions.memberPubkeys,
       mentions.getDraftMentionRefs,
       onPrepareSendChannel,
     ],
