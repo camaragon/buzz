@@ -40,6 +40,7 @@ import { parseImetaTags } from "@/shared/ui/markdown/parseImeta";
 import { useMessageEmoji } from "@/features/messages/lib/useMessageEmoji";
 import { parseWaveMessageContent } from "@/features/messages/lib/waveMessage";
 import { resolveSnapshotSharedBy } from "@/features/messages/lib/snapshotSharedBy";
+import { splitIncidentMessageBody } from "@/features/messages/lib/incidentMessageBody";
 import { resolveMentionProps } from "@/shared/lib/resolveMentionNames";
 import type { VideoReviewContext } from "@/shared/ui/VideoPlayer";
 import { VideoReviewCommentMarkdown } from "@/shared/ui/VideoReviewCommentMarkdown";
@@ -307,6 +308,10 @@ export const MessageRow = React.memo(
       message.body,
       message.tags,
     );
+    const incidentBody = React.useMemo(
+      () => splitIncidentMessageBody(message.body),
+      [message.body],
+    );
     const bodyOffsetClass = emojiOnly ? "mt-1" : "mt-conversation-body";
 
     const { nonDmChannelNames: channelNames } = useChannelNavigation();
@@ -422,37 +427,63 @@ export const MessageRow = React.memo(
           }
 
           return (
-            <VideoReviewCommentMarkdown
-              channelNames={channelNames}
-              className={cn(
-                "max-w-full text-message",
-                emojiOnly &&
-                  "text-4xl leading-tight [&_p]:leading-tight [&_img[data-custom-emoji]]:h-[1.45em] [&_img[data-custom-emoji]]:align-middle [&_button:has(img[data-custom-emoji])]:align-middle",
-              )}
-              // Only pass the author pubkey for agent-authored messages so
-              // config-nudge cards can authenticate the sender. Uses the
-              // raw event signer (signerPubkey), not a relay-delegated display
-              // author, because the agent itself must have signed the card.
-              configNudgeAuthorPubkey={getConfigNudgeAuthorPubkey(
-                message,
-                isKnownAgentPubkey,
-              )}
-              content={message.body}
-              messageId={message.id}
-              linkPreviewsSuppressed={linkPreviewsSuppressed}
-              linkPreviewTags={message.tags}
-              leadingInlineContent={agentAddressPrefix}
-              onRemoveLinkPreviewsForEveryone={removeLinkPreviewsForEveryone}
-              customEmoji={customEmoji}
-              imetaByUrl={imetaByUrl}
-              agentMentionPubkeysByName={agentMentionPubkeysByName}
-              mentionNames={mentionNames}
-              mentionPubkeysByName={mentionPubkeysByName}
-              searchQuery={searchQuery}
-              snapshotSharedBy={snapshotSharedBy}
-              videoReviewCommentRootId={videoReviewCommentRootId}
-              videoReviewContext={videoReviewContext}
-            />
+            <>
+              <VideoReviewCommentMarkdown
+                channelNames={channelNames}
+                className={cn(
+                  "max-w-full text-message",
+                  incidentBody && "incident-message-markdown",
+                  emojiOnly &&
+                    "text-4xl leading-tight [&_p]:leading-tight [&_img[data-custom-emoji]]:h-[1.45em] [&_img[data-custom-emoji]]:align-middle [&_button:has(img[data-custom-emoji])]:align-middle",
+                )}
+                // Only pass the author pubkey for agent-authored messages so
+                // config-nudge cards can authenticate the sender. Uses the
+                // raw event signer (signerPubkey), not a relay-delegated display
+                // author, because the agent itself must have signed the card.
+                configNudgeAuthorPubkey={getConfigNudgeAuthorPubkey(
+                  message,
+                  isKnownAgentPubkey,
+                )}
+                content={incidentBody?.primary ?? message.body}
+                messageId={message.id}
+                linkPreviewsSuppressed={linkPreviewsSuppressed}
+                linkPreviewTags={message.tags}
+                leadingInlineContent={agentAddressPrefix}
+                onRemoveLinkPreviewsForEveryone={removeLinkPreviewsForEveryone}
+                customEmoji={customEmoji}
+                imetaByUrl={imetaByUrl}
+                agentMentionPubkeysByName={agentMentionPubkeysByName}
+                mentionNames={mentionNames}
+                mentionPubkeysByName={mentionPubkeysByName}
+                searchQuery={searchQuery}
+                snapshotSharedBy={snapshotSharedBy}
+                videoReviewCommentRootId={videoReviewCommentRootId}
+                videoReviewContext={videoReviewContext}
+              />
+              {incidentBody ? (
+                <details className="incident-message-details">
+                  <summary>Details</summary>
+                  <VideoReviewCommentMarkdown
+                    channelNames={channelNames}
+                    className="incident-message-details-markdown max-w-full text-message"
+                    content={incidentBody.details}
+                    messageId={message.id}
+                    linkPreviewsSuppressed={linkPreviewsSuppressed}
+                    linkPreviewTags={message.tags}
+                    onRemoveLinkPreviewsForEveryone={
+                      removeLinkPreviewsForEveryone
+                    }
+                    customEmoji={customEmoji}
+                    imetaByUrl={imetaByUrl}
+                    agentMentionPubkeysByName={agentMentionPubkeysByName}
+                    mentionNames={mentionNames}
+                    mentionPubkeysByName={mentionPubkeysByName}
+                    searchQuery={searchQuery}
+                    snapshotSharedBy={snapshotSharedBy}
+                  />
+                </details>
+              ) : null}
+            </>
           );
         }
       }

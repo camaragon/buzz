@@ -856,8 +856,7 @@ pub async fn create_managed_agent(
 }
 
 /// Data needed for background profile reconciliation after agent start.
-#[tauri::command]
-pub async fn start_managed_agent(
+pub(super) async fn start_managed_agent_unchecked(
     pubkey: String,
     expected_relay_url: Option<String>,
     expected_signer_pubkey: Option<String>,
@@ -1035,8 +1034,7 @@ pub async fn start_managed_agent(
     result
 }
 
-#[tauri::command]
-pub async fn stop_managed_agent(
+pub(super) async fn stop_managed_agent_unchecked(
     pubkey: String,
     app: AppHandle,
 ) -> Result<ManagedAgentSummary, String> {
@@ -1088,8 +1086,7 @@ pub async fn stop_managed_agent(
 
 // Async so the blocking body (disk reads/writes, process termination, keyring
 // delete, nest regeneration) runs off the main UI thread via spawn_blocking.
-#[tauri::command]
-pub async fn delete_managed_agent(
+pub(super) async fn delete_managed_agent_unchecked(
     pubkey: String,
     force_remote_delete: Option<bool>,
     app: AppHandle,
